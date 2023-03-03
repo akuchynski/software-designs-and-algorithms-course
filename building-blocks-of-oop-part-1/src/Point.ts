@@ -13,18 +13,21 @@ export class Point {
   public distance(otherPoint: Point);
   public distance(x, y);
   public distance(otherPointOrX: Point | number = 0, y: number = 0): number {
-    let x2: number;
-    let y2: number;
+    const { x: x1, y: y1 } = this;
 
     if (otherPointOrX instanceof Point) {
-      x2 = otherPointOrX.x;
-      y2 = otherPointOrX.y;
-    } else {
-      x2 = otherPointOrX;
-      y2 = y;
+      const { x: x2, y: y2 } = otherPointOrX;
+      return Point.getDistanceByPythagoreanTheorem(x1, y1, x2, y2);
     }
 
-    return Math.sqrt(Math.pow(x2 - this.x, 2) + Math.pow(y2 - this.y, 2));
+    return Point.getDistanceByPythagoreanTheorem(x1, y1, otherPointOrX, y);
+  }
+
+  private static getDistanceByPythagoreanTheorem(x1: number, y1: number, x2: number, y2: number): number {
+    const deltaX = x2 - x1;
+    const deltaY = y2 - y1;
+
+    return Math.sqrt(deltaX ** 2 + deltaY ** 2);
   }
 
   public toString(): string {

@@ -25,14 +25,8 @@ export class Triangle extends Shape {
   }
 
   public toString(): string {
-    return `Triangle[${this.points.reduce((acc, point, index, arr) => {
-      const vertexNumber = index + 1;
-      if (index === arr.length - 1) {
-        return `${acc}v${vertexNumber}=${point.toString()}]`;
-      } else {
-        return `${acc}v${vertexNumber}=${point.toString()},`;
-      }
-    }, "")}`;
+    const result = this.points.map((point, index) => `v${index + 1}=${point.toString()}`).join();
+    return `Triangle[${result}]`;
   }
 
   private getTriangleSides(): number[] {
