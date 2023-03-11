@@ -1,20 +1,67 @@
-import { Either, fromPromise, ap, right, getOrElse, flatten } from './fp/either';
-import { pipe } from './fp/utils';
-import { fetchClient, fetchExecutor } from './fetching';
-import { ClientUser, ExecutorUser } from './types';
+import { Either, fromPromise, ap, right, getOrElse, flatten, left } from "./fp/either";
+import { pipe } from "./fp/utils";
+import { fetchClient, fetchExecutor } from "./fetching";
+import { ClientUser, Demand, ExecutorUser } from "./types";
+import { fold, fromNullable } from "./fp/maybe";
+import { distance } from "./utils";
+import { fromCompare, ordNumber, revert } from "./fp/ord";
 
 type Response<R> = Promise<Either<string, R>>
 
 const getExecutor = (): Response<ExecutorUser> => fromPromise(fetchExecutor());
-const getClients = (): Response<Array<ClientUser>> => fromPromise(fetchClient());
+const getClients = (): Response<Array<ClientUser>> => fromPromise(fetchClient()
+  .then(value => value.map(({ demands, ...restParams }) => ({
+    demands: fromNullable(demands),
+    ...restParams
+  }))));
 
 export enum SortBy {
-  distance = 'distance',
-  reward = 'reward',
+  distance = "distance",
+  reward = "reward",
 }
 
 export const show = (sortBy: SortBy) => (clients: Array<ClientUser>) => (executor: ExecutorUser): Either<string, string> => {
+  const rewardPredicate = (item1: ClientUser, item2: ClientUser) => (
+    ordNumber.compare(item1.reward, item2.reward)
+  );
 
+  const distancePredicate = (item1: ClientUser, item2: ClientUser) => (
+    ordNumber.compare(distance(item1.position, executor.position), distance(item2.position, executor.position))
+  );
+
+  const rewardOrd = revert(fromCompare(rewardPredicate));
+  const distanceOrd = fromCompare(distancePredicate);
+
+  const compareClients = (a: ClientUser, b: ClientUser): number => {
+    return sortBy === SortBy.reward ? rewardOrd.compare(a, b) : distanceOrd.compare(a, b);
+  };
+
+  const sortedClients = [...clients].sort(compareClients);
+
+  const executorClients = sortedClients.filter(client => {
+    const isMeetDemands = fold<Array<Demand>, boolean>(
+      () => true,
+      (clientDemands) => clientDemands.every(demand => executor.possibilities.includes(demand))
+    );
+    return isMeetDemands(client.demands);
+  });
+
+  const clientsCount = executorClients.length;
+  const allClientsCount = sortedClients.length;
+
+  let result = `This executor meets the demands of only ${clientsCount} out of ${allClientsCount} clients\n\n`;
+
+  const tableHeader = sortBy === SortBy.reward ?
+    "Available clients sorted by highest reward:\n" :
+    "Available clients sorted by distance to executor:\n";
+  const tableRows = executorClients.map(client => `name: ${client.name}, distance: ${distance(client.position, executor.position).toFixed(3)}, reward: ${client.reward}`);
+  const table = tableHeader + tableRows.join("\n");
+
+  return clientsCount === 0 ?
+    left("This executor cannot meet the demands of any client!") :
+    right(clientsCount === allClientsCount ?
+      "This executor meets all demands of all clients!\n\n" :
+      result + table);
 };
 
 export const main = (sortBy: SortBy): Promise<string> => (

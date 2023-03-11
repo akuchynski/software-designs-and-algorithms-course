@@ -1,4 +1,4 @@
-import { Setoid } from './setoid';
+import { Setoid } from "./setoid";
 
 export enum Ordering {
   less = -1,
@@ -25,7 +25,7 @@ export const ordNumber: Ord<number> = {
     ? Ordering.less
     : x > y
       ? Ordering.greater
-      : Ordering.equal,
+      : Ordering.equal
 };
 
 /**

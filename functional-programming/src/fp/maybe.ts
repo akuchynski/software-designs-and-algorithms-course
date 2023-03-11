@@ -1,9 +1,9 @@
 export type None = {
-  _tag: 'None'
+  _tag: "None"
 };
 
 export type Some<T> = {
-  readonly _tag: 'Some',
+  readonly _tag: "Some",
   readonly value: T;
 }
 
@@ -13,21 +13,21 @@ export type Some<T> = {
  */
 export type Maybe<T> = Some<T> | None
 
-export const isSome = <T>(optional: Maybe<T>): optional is Some<T> => optional._tag === 'Some';
-export const isNone = <T>(optional: Maybe<T>): optional is None => optional._tag === 'None';
+export const isSome = <T>(optional: Maybe<T>): optional is Some<T> => optional._tag === "Some";
+export const isNone = <T>(optional: Maybe<T>): optional is None => optional._tag === "None";
 
 export const some = <T>(value: T): Some<T> => ({
-  _tag: 'Some',
-  value,
+  _tag: "Some",
+  value
 });
 export const none: Readonly<None> = {
-  _tag: 'None',
+  _tag: "None"
 };
 
 /**
  * Create a Maybe instance form the value. If value(T) is nullable(null or undefined), returns None, otherwise it returns Some<T>
  */
-export const fromNullable = <T>(value: T) => ();
+export const fromNullable = <T>(value: T): Maybe<T> => !value ? none : some(value);
 
 /**
  * Get the value from Some, or returns the result of onNone
@@ -44,6 +44,5 @@ export const getOrElse = <T>(onNone: () => T) => (val: Maybe<T>): T => isSome(va
  */
 export const fold = <T, R>(
   onNone: () => R,
-  onSome: (v: T) => R,
-) => (optional: Maybe<T>): R => (
-);
+  onSome: (v: T) => R
+) => (optional: Maybe<T>): R => isSome(optional) ? onSome(optional.value) : onNone();
