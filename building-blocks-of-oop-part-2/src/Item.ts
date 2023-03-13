@@ -22,13 +22,10 @@ export abstract class Item implements Comparable<Item> {
   }
 
   public compareTo(other: Item): number {
-    if (this.value > other.value) {
-      return 1;
-    } else if (this.value < other.value) {
-      return -1;
-    } else {
-      return this.name.localeCompare(other.name);
+    if (this.value === other.value) {
+      return this.name.localeCompare(other.name)
     }
+    return this.value > other.value ? 1 : -1;
   }
 
   public toString(): string {

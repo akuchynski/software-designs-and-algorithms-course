@@ -47,22 +47,20 @@ export abstract class Weapon extends Item {
   }
 
   public use(): string {
-    let result;
-    const nextEffectiveDurability = this.baseDurability - Weapon.MODIFIER_CHANGE_RATE;
-
-    if (this.baseDurability > 0) {
-      result = `You use the ${this.name}, dealing ${Weapon.MODIFIER_CHANGE_RATE} points of damage.`;
-
-      this.setDurability(nextEffectiveDurability);
-
-      if (this.baseDurability <= 0) {
-        result += `\nThe ${this.name} breaks.`;
-      }
-    } else {
-      result = `You can't use the ${this.name}, it is broken.`;
+    if (this.baseDurability <= 0) {
+      return `You can't use the ${this.name}, it is broken.`;
     }
 
-    return result;
+    const nextEffectiveDurability = this.baseDurability - Weapon.MODIFIER_CHANGE_RATE;
+    this.setDurability(nextEffectiveDurability);
+
+    const usageText = `You use the ${this.name}, dealing ${Weapon.MODIFIER_CHANGE_RATE} points of damage.`
+
+    if (this.baseDurability <= 0) {
+      return `${usageText}\nThe ${this.name} breaks.`;
+    }
+
+    return usageText;
   }
 
   abstract polish(): void;

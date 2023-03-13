@@ -14,13 +14,11 @@ export class Pizza extends Consumable {
   }
 
   public use(): string {
-    if (this.numberOfEatenSlices < this.numberOfSlices) {
-      this.numberOfEatenSlices++;
-      return `You consumed a slice of the ${this.name}.`;
-    }
     if (this.numberOfEatenSlices >= this.numberOfSlices) {
       this.isConsumed = true;
+      return super.use();
     }
-    return super.use();
+    this.numberOfEatenSlices++;
+    return `You consumed a slice of the ${this.name}.`;
   }
 }

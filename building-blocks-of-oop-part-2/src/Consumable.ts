@@ -15,15 +15,15 @@ export abstract class Consumable extends Item {
   }
 
   public use(): string {
-    let result;
     if (this.isConsumed) {
-      result = `There's nothing left of the ${this.name} to consume.`;
-    } else {
-      result = `You consumed the ${this.name}.`;
-      if (this._isSpoiled) {
-        result += "\nYou feel sick.";
-      }
+      return `There's nothing left of the ${this.name} to consume.`;
     }
+
+    let result = `You consumed the ${this.name}.`;
+    if (this._isSpoiled) {
+      result += "\nYou feel sick.";
+    }
+
     return result;
   }
 }

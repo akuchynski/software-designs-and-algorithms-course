@@ -9,9 +9,8 @@ export class Inventory {
   public sort(comparator?: ItemComparator) {
     if (comparator) {
       return this.items.sort((a, b) => comparator.compare(a, b));
-    } else {
-      return this.items.sort((a, b) => a.value - b.value);
     }
+    return this.items.sort((a, b) => a.value - b.value);
   }
 
   public addItem(item: Item): void {
