@@ -15,6 +15,16 @@ export function flow(...fns: Array<(...args: Array<string>) => string>) {
   );
 }
 
+export function flowAsync<A, B, C>(fa: (a: A) => Promise<B>, fb: (b: B) => Promise<C>): (a: A) => Promise<C>;
+export function flowAsync<A, B, C, D>(fa: (a: A) => Promise<B>, fb: (b: B) => Promise<C>, fc: (c: C) => Promise<D>): (a: A) => Promise<D>;
+export function flowAsync(...fns: Array<(...args: Array<any>) => Promise<any>>) {
+  return (a: any) => fns.reduce(
+    async (acc, fn) => await fn(await acc),
+    a
+  );
+}
+
+export type PipeFunction<T> = (arg: T) => T;
 /**
  * Pipes the value into the pipeline of functions
  * Handy for automatic data typing
@@ -23,7 +33,7 @@ export function pipe<A, B>(a: A, fb: (a: A) => B): B;
 export function pipe<A, B, C>(a: A, fb: (a: A) => B, fc: (b: B) => C): C;
 export function pipe<A, B, C, D>(a: A, fb: (a: A) => B, fc: (b: B) => C, fd: (c: C) => D): D;
 export function pipe<A, B, C, D, E>(a: A, fb: (a: A) => B, fc: (b: B) => C, fd: (c: C) => D, fe: (d: D) => E): E;
-export function pipe(a: string, ...fns: Array<(...args: Array<string>) => string>) {
+export function pipe(a: string, ...fns: Array<PipeFunction<string>>): string {
   return fns.reduce(
     (acc, fn) => fn(acc),
     a

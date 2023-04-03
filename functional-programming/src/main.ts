@@ -1,5 +1,5 @@
 import { Either, fromPromise, ap, right, getOrElse, flatten, left } from "./fp/either";
-import { pipe } from "./fp/utils";
+import { constant, matcher, pipe } from "./fp/utils";
 import { fetchClient, fetchExecutor } from "./fetching";
 import { ClientUser, Demand, ExecutorUser } from "./types";
 import { fold, fromNullable } from "./fp/maybe";
@@ -20,20 +20,15 @@ export enum SortBy {
   reward = "reward",
 }
 
+const rewardPredicate = (item1: ClientUser, item2: ClientUser) => (
+  ordNumber.compare(item1.reward, item2.reward)
+);
+
 export const show = (sortBy: SortBy) => (clients: Array<ClientUser>) => (executor: ExecutorUser): Either<string, string> => {
-  const rewardPredicate = (item1: ClientUser, item2: ClientUser) => (
-    ordNumber.compare(item1.reward, item2.reward)
-  );
-
-  const distancePredicate = (item1: ClientUser, item2: ClientUser) => (
-    ordNumber.compare(distance(item1.position, executor.position), distance(item2.position, executor.position))
-  );
-
-  const rewardOrd = revert(fromCompare(rewardPredicate));
-  const distanceOrd = fromCompare(distancePredicate);
 
   const compareClients = (a: ClientUser, b: ClientUser): number => {
-    return sortBy === SortBy.reward ? rewardOrd.compare(a, b) : distanceOrd.compare(a, b);
+    return sortBy === SortBy.reward ? revert(fromCompare(rewardPredicate)).compare(a, b) :
+      ordNumber.compare(distance(a.position, executor.position), distance(b.position, executor.position))
   };
 
   const sortedClients = [...clients].sort(compareClients);
@@ -49,19 +44,24 @@ export const show = (sortBy: SortBy) => (clients: Array<ClientUser>) => (executo
   const clientsCount = executorClients.length;
   const allClientsCount = sortedClients.length;
 
-  let result = `This executor meets the demands of only ${clientsCount} out of ${allClientsCount} clients\n\n`;
+  const useRewardText = () => "Available clients sorted by highest reward:\n"
+  const useDistanceText = () => "Available clients sorted by distance to executor:\n"
+  const is = (sortByText: string) => (sortBy: SortBy) => sortBy === sortByText;
 
-  const tableHeader = sortBy === SortBy.reward ?
-    "Available clients sorted by highest reward:\n" :
-    "Available clients sorted by distance to executor:\n";
+  const sortTextMatcher = matcher(
+    [is('reward'), useRewardText],
+    [is('distance'), useDistanceText],
+    [constant(true), () => 'Sort order is incorrect']
+  );
+
   const tableRows = executorClients.map(client => `name: ${client.name}, distance: ${distance(client.position, executor.position).toFixed(3)}, reward: ${client.reward}`);
-  const table = tableHeader + tableRows.join("\n");
+  const table = sortTextMatcher(sortBy) + tableRows.join("\n");
 
   return clientsCount === 0 ?
     left("This executor cannot meet the demands of any client!") :
     right(clientsCount === allClientsCount ?
       "This executor meets all demands of all clients!\n\n" :
-      result + table);
+      `This executor meets the demands of only ${clientsCount} out of ${allClientsCount} clients\n\n${table}`);
 };
 
 export const main = (sortBy: SortBy): Promise<string> => (

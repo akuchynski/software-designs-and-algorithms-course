@@ -70,7 +70,7 @@ export const flatten = <E, A>(a: Either<E, Either<E, A>>): Either<E, A> => (
  * Or the Promise is rejected - should return Left
  */
 export const fromPromise = <E, A>(promise: Promise<A>): Promise<Either<E, A>> => (
-  promise.then(right, left)
+  promise.then((value) => right(value)).catch((error) => left(error))
 );
 /**
  * Get the value from the Right, or call onLeft function

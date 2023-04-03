@@ -1,4 +1,4 @@
-import { constant, flow, matcher, pipe, prop } from '../../src/fp/utils';
+import { constant, flow, flowAsync, matcher, pipe, prop } from '../../src/fp/utils';
 import { none, some } from '../../src/fp/maybe';
 
 describe('utils', () => {
@@ -29,6 +29,17 @@ describe('utils', () => {
     );
 
     expect(f('word,')).toBe(8);
+  });
+
+  it('flowAsync composes functions', async () => {
+    const flow = flowAsync(
+      (x: number) => Promise.resolve(x + 1),
+      (x: number) => Promise.resolve(x * 2),
+      (x: number) => Promise.resolve(x * x),
+    );
+    const result = await flow(2);
+
+    expect(result).toBe(36);
   });
 
   it('matcher performs pattern matching', () => {
